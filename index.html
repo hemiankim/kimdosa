@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=10.0, user-scalable=yes, viewport-fit=cover, shrink-to-fit=no">
+<title>프리미엄 명리 만세력</title>
+<script src="lunar.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+    /* UI 디자인 시스템 */
+    :root {
+        --wood: #2d9a58; --fire: #e74c3c; --earth: #d4a017;  
+        --metal: #7f8c8d; --water: #2c3e50; --primary: #4e73df;
+        --box-bg: #ffffff; --bg-main: #f8f9fc;
+        --accent: #f6ad55; --gold: #b45309; --special: #7c3aed;
+    }
+    body { 
+        font-family: 'Noto Sans KR', sans-serif; 
+        background: var(--bg-main); 
+        padding: 10px; 
+        color: #333; 
+        margin: 0; 
+        line-height: 1.6; 
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation; /* 확대/축소 및 스크롤 최적화 */
+    }
+    .container { 
+        width: 100%;
+        max-width: 1200px; /* PC에서도 시원하게 보이도록 확장 */
+        margin: auto; 
+        box-sizing: border-box;
+    }
+    header { padding: 30px 10px 20px; text-align: center; }
+    header h1 { font-family: 'Noto Serif KR'; font-size: 1.8rem; margin: 0; color: #1a1c23; letter-spacing: -1px; }
+    header p { font-size: 0.85rem; color: #718096; margin-top: 5px; }
+    .box { background: var(--box-bg); padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.03); }
+    
+    .controls { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .controls input, .controls select, .controls button { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #edf2f7; background: #fdfdfd; font-size: 15px; font-weight: 500; outline: none; box-sizing: border-box; }
+    
+    .btn-main { grid-column: span 2; background: var(--primary) !important; color: white !important; border: none; font-weight: 900; font-size: 16px; margin-top: 10px; box-shadow: 0 4px 10px rgba(78, 115, 223, 0.4); cursor: pointer; text-align: center; }
+    .btn-save { grid-column: span 2; background: var(--gold) !important; color: white !important; border: none; font-weight: 800; margin-top: 5px; }
+
+    /* 고객 저장소 UI */
+    .customer-list { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+    .customer-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f9fbff; border-radius: 10px; margin-bottom: 8px; border: 1px solid #e2e8f0; font-size: 14px; }
+    .customer-info { flex-grow: 1; cursor: pointer; }
+    .customer-del { color: #e74c3c; font-weight: bold; cursor: pointer; padding: 5px 10px; }
+
+    /* 일일 리포트 탭 스타일 */
+    .report-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
+    .tab-btn { 
+        flex: 1; 
+        padding: 10px 4px; 
+        min-height: 64px; 
+        border-radius: 12px; 
+        border: 1.5px solid #e2e8f0; 
+        background: #fff; 
+        font-weight: 800; 
+        cursor: pointer; 
+        transition: all 0.2s; 
+        font-size: 13px; 
+        color: #64748b; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        text-align: center; 
+        line-height: 1.4; 
+        word-break: keep-all; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(78, 115, 223, 0.2); }
+    .tab-btn.health.active { background: #16a34a; border-color: #16a34a; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2); }
+
+    /* 건강 리포트 상세 스타일 */
+    .h-report-card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+    .h-verdict-box { background: #f8fafc; border-left: 6px solid var(--primary); padding: 20px; border-radius: 12px; font-size: 14px; line-height: 1.8; color: #334155; margin-bottom: 25px; }
+    .h-item-card { padding: 20px; background: #ffffff; border: 1px solid #f1f5f9; border-radius: 16px; margin-bottom: 15px; border-left: 6px solid #ddd; position: relative; }
+    .h-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .h-item-title { font-size: 1.1rem; font-weight: 900; color: #1e293b; }
+    .h-item-pct { font-size: 1.1rem; font-weight: 900; color: #1e293b; }
+    .h-item-desc { font-size: 13px; color: #64748b; font-style: italic; margin-bottom: 12px; display: block; }
+    .h-status-tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 800; margin-bottom: 10px; }
+    .h-status-tag.ok { background: #dcfce7; color: #16a34a; }
+    .h-status-tag.warn { background: #fee2e2; color: #dc2626; }
+    .h-status-tag.cool { background: #dbeafe; color: #2563eb; }
+    .h-advice-box { background: #f1f5f9; padding: 12px; border-radius: 10px; font-size: 13px; line-height: 1.6; }
+    .h-sec-title { font-size: 1.1rem; font-weight: 900; border-left: 5px solid var(--primary); padding-left: 12px; margin: 30px 0 15px 0; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+    
+    .h-detail-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .h-detail-table th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #475569; }
+    .h-detail-table td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    .h-detail-un { font-weight: 900; color: #1e293b; }
+    .h-detail-sip { font-size: 12px; line-height: 1.5; color: #334155; }
+    .h-detail-action { font-size: 12px; color: #64748b; line-height: 1.6; }
+
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 4px; margin-bottom: 4px; color: white; }
+    .tag-hap { background: #16a34a; }
+    .tag-bad { background: #dc2626; }
+
+    /* 기존 엔진 스타일 유지 */
+    .leap-wrapper { grid-column: span 2; display: none; align-items: center; justify-content: center; gap: 10px; background: #fff5f5; padding: 10px; border-radius: 12px; color: #e53e3e; font-weight: bold; }
+    .time-wrapper { grid-column: span 2; display: flex; align-items: center; justify-content: center; gap: 15px; background: #f0f7ff; padding: 10px; border-radius: 12px; color: #2b6cb0; font-weight: bold; font-size: 13px; border: 1px solid #bee3f8;}
+    .time-wrapper input { width: auto; }
+    
+    h3 { font-size: 1.1rem; color: #2d3748; margin: 0 0 15px 0; font-family: 'Noto Serif KR'; display: flex; align-items: center; }
+    h3::before { content: ""; display: inline-block; width: 4px; height: 16px; background: var(--primary); margin-right: 10px; border-radius: 2px; }
+    .analysis-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .analysis-item { background: #f8fafc; padding: 15px; border-radius: 16px; border-left: 4px solid var(--primary); }
+    .res-bold { font-size: 1.1rem; font-weight: 800; color: #1a202c; display: block; }
+    .res-sub { font-size: 0.8rem; color: #718096; margin-top: 4px; display: block; }
+    .score-container { margin: 15px 0; }
+    .score-bar { width: 100%; height: 10px; background: #edf2f7; border-radius: 50px; overflow: hidden; margin-top: 8px; }
+    .score-fill { height: 100%; background: linear-gradient(90deg, #f6ad55, #e74c3c); transition: width 1s ease-in-out; }
+    .saju-wrapper { overflow-x: hidden; padding: 5px 0; }
+    .saju { display: flex; justify-content: space-between; gap: 4px; width: 100%; }
+    .pillar { background: #ffffff; border: 1.5px solid #edf2f7; padding: 10px 2px; border-radius: 15px; text-align: center; flex: 1; min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+    .pillar-label { font-size: 12px; color: #4a5568; margin-bottom: 6px; font-weight: 900; background: #f7fafc; padding: 2px 0; border-radius: 4px; }
+    .big { font-size: 26px; font-family: 'Noto Serif KR'; font-weight: 900; line-height: 1.1; position: relative; }
+    .gm-tag { position: absolute; top: -2px; right: -2px; font-size: 9px; color: #e53e3e; font-weight: 900; background: rgba(255,255,255,0.8); border-radius: 2px; padding: 0 2px; }
+    .janggan-box { margin-top: 6px; padding: 6px 2px; background: #f8fafc; border-radius: 8px; width: 98%; margin-left: auto; margin-right: auto; }
+    .jg-char { font-size: 14px; font-weight: 900; }
+    .jg-sip { font-size: 10px; color: #4a5568; display: block; margin-top: -1px; font-weight: 700; }
+    .sip-text { font-size: 12px; font-weight: 900; color: #1a202c; margin: 4px 0; height: 18px; display: flex; align-items: center; justify-content: center; }
+    .u-tag { font-size: 11px; color: #fff; background: #4a5568; border-radius: 4px; padding: 2px 6px; display: inline-block; margin-bottom: 4px; font-weight: 800; }
+    .shinsal-group { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; align-items: center; width: 100%; }
+    .s-tag { font-size: 10px; font-weight: 800; border-radius: 3px; padding: 2px 0; color: white; width: 95%; text-align: center; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .spec-group { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; align-items: center; width: 100%; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
+    .spec-tag { font-size: 10px; font-weight: 900; border-radius: 4px; padding: 2px 0; color: #fff; width: 95%; text-align: center; display: block; background: #7c3aed; box-shadow: 0 1px 3px rgba(124, 58, 237, 0.3); }
+    .spec-tag.lucky { background: #b45309; } /* 귀인류: 금색/갈색 */
+    .spec-tag.warn { background: #dc2626; }  /* 살성류: 빨간색 */
+
+    /* 모바일 반응형 강화 */
+    @media (max-width: 480px) {
+        body { padding: 5px; }
+        .box { padding: 15px 10px; border-radius: 12px; }
+        .big { font-size: 24px; }
+        .pillar-label { font-size: 11px; }
+        .sip-text { font-size: 10px; }
+        .jg-char { font-size: 12px; }
+        .jg-sip { font-size: 8px; }
+        #calendar-table td { height: 75px; padding: 2px; }
+        .cal-num { font-size: 12px; }
+        .cal-lunar { font-size: 8px; }
+        .cal-gz-txt { font-size: 13px; letter-spacing: -1px; margin-top: 2px; }
+        .cal-gz-sub { display: none; } /* 모바일 간지 숨김 */
+        .u-tag { font-size: 9px; padding: 1px 4px; }
+    }
+
+    .s-year { background: #4299e1; } .s-month { background: #48bb78; } .s-day { background: #ed8936; } .s-hour { background: #9f7aea; }
+    .unlist-wrapper { overflow-x: auto; margin: 0 -10px; padding: 0 10px 15px; -webkit-overflow-scrolling: touch; }
+    .unlist { display: flex; gap: 12px; }
+    .un { background: #fff; border: 1px solid #edf2f7; padding: 12px 8px; border-radius: 18px; min-width: 135px; text-align: center; flex-shrink: 0; }
+    .un.active { border: 2px solid var(--primary); background: #f0f5ff; }
+
+    /* 달력 고정 레이아웃 */
+    #calendar-table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 1px; }
+    #calendar-table th { font-size: 11px; padding: 5px 0; color: #a0aec0; }
+    #calendar-table td { background: #fff; border: 1px solid #f1f5f9; height: 90px; border-radius: 8px; vertical-align: top; padding: 4px; cursor: pointer; transition: all 0.2s; overflow: hidden; }
+    #calendar-table td:hover { background: #f8fafc; border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .cal-num { font-weight: 900; font-size: 16px; color: #1a202c; }
+    .cal-lunar { font-size: 10px; color: #f6ad55; font-weight: bold; }
+    .cal-gz-txt { font-size: 12px; font-weight: 800; text-align: center; margin-top: 4px; line-height: 1.4; }
+    .cal-gz-sub { font-size: 9px; color: #a0aec0; font-weight: 600; margin-bottom: 2px; }
+
+    .report-header { background: linear-gradient(135deg, var(--primary), #3751a4); color: white; padding: 30px 20px; text-align: center; }
+    .score-badge { font-size: 2.2rem; background: rgba(255,255,255,0.2); border-radius: 50%; width: 85px; height: 85px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; border: 2px solid #fff; font-weight: 900; }
+    .w-full-card { border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px; margin-top: 15px; background: #fff; text-align: left; }
+    .w-full-title { font-size: 1rem; font-weight: 800; color: var(--gold); border-bottom: 1px solid #fdf2f2; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .w-full-score-badge { background: var(--gold); color: white; padding: 3px 12px; border-radius: 50px; font-size: 0.85rem; }
+    .w-full-log-box { background: #f8fafc; border-radius: 10px; padding: 10px; border: 1px solid #edf2f7; }
+    .w-full-log-item { font-size: 12px; display: flex; align-items: center; gap: 6px; margin-bottom: 5px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 5px; color: #4a5568; }
+    .special-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+    .special-cell { background: #fdfaff; border: 1px solid #e9d5ff; padding: 10px; border-radius: 12px; text-align: left; }
+    .special-label { font-size: 10px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px; }
+    .special-val { font-weight: 800; color: var(--special); display: block; font-size: 11px; line-height: 1.4; }
+    .w-full-chart { display: flex; justify-content: space-between; align-items: flex-end; height: 65px; background: #f1f5f9; border-radius: 10px; padding: 12px; margin-top: 10px; border: 1px solid #e2e8f0; }
+    .w-full-bar { width: 6%; background: var(--gold); border-radius: 2px; transition: 0.5s; }
+    .gaewun-grid-full { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+    .gaewun-item-full { padding: 12px; border-radius: 12px; background: #f0f9ff; text-align: center; font-size: 12px; border: 1px solid #e0f2fe; }
+    .gaewun-item-full b { color: var(--primary); display: block; margin-top: 4px; font-size: 14px; }
+    .wood { color: var(--wood) !important; } .fire { color: var(--fire) !important; } 
+    .earth { color: var(--earth) !important; } .metal { color: var(--metal) !important; } .water { color: var(--water) !important; }
+    .desc-box { background: #fffaf0; border-radius: 15px; padding: 15px; font-size: 13px; border: 1px solid #feebc8; margin-top: 10px; }
+    .desc-title { font-weight: 800; color: #c05621; display: block; margin-bottom: 5px; }
+    .yong-tag { display:inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-right: 5px; margin-bottom: 5px; color: white; }
+    .yong-tag.primary { background: #4e73df; }
+    .yong-tag.climate { background: #e74c3c; }
+    .yong-tag.problem { background: #f6ad55; }
+    .yong-tag.balance { background: #2d9a58; }
+</style>
+</head>
+
+<body>
+<div class="container">
+    <header>
+        <h1>프리미엄 명리 만세력</h1>
+        <p style="color:#64748b; font-size:0.85rem; margin-top:8px;">연제구 김도사 | 날개PC 소프트웨어</p>
+        
+        <div style="background:#f1f5f9; padding:15px; border-radius:15px; margin:15px 10px; font-size:0.82rem; color:#475569; line-height:1.7; border:1px solid #e2e8f0;">
+            <div style="font-weight:900; color:#1e293b; margin-bottom:5px; display:flex; align-items:center; justify-content:center; gap:5px;">
+                <span>✨</span> 광고 없는 쾌적한 명리 환경을 위해
+            </div>
+            오직 명리에만 집중할 수 있는 행복한 프로그램을 만들어 가겠습니다..<br>
+            개인과 전문가 모두 편히 이용하시되, 앱이 마음에 드신다면 <b style="color:#4e73df;">커피 한 잔의 따뜻한 후원</b>으로 응원해 주세요.<br>
+            보내주신 소중한 마음은 더 정교한 알고리즘과 기능 고도화로 보답하겠습니다.<br>
+            <div style="margin-top:8px; padding:5px; background:#fff; border-radius:8px; border:1px dashed #cbd5e1; font-weight:800; color:#1e40af;">
+                🏦 케이뱅크 100-122-760208 (김*현)
+            </div>
+            <p style="margin-top:10px; font-size:0.75rem; color:#94a3b8; font-weight:500;">
+                본 프로그램의 모든 저작권은 날개PC에 있으며, 무단 수정 및 도용보다는 창작자의 노력을 존중해 주시길 부탁드립니다.
+            </p>
+        </div>
+
+    </header>
+
+    <div class="box">
+        <div class="controls">
+            <input type="text" id="custName" placeholder="고객 성함" style="grid-column: span 2;">
+            <select id="sex"><option value="M">남성</option><option value="F">여성</option></select>
+            <select id="calType" onchange="toggleLeap()"><option value="solar">양력</option><option value="lunar">음력</option></select>
+            <div id="leapWrapper" class="leap-wrapper"><input type="checkbox" id="isLeap"> <label for="isLeap">윤달</label></div>
+            
+            <div class="time-wrapper">
+                <label><input type="checkbox" id="useLocalTime" checked> 자연시(경도 -30분)</label>
+                <label><input type="checkbox" id="useYajasi"> 야자시 적용</label>
+            </div>
+            
+            <select id="year"></select><select id="month"></select><select id="day"></select><select id="hour"></select>
+            <select id="min" style="grid-column: span 2;"></select>
+            <button class="btn-main" onclick="run()">사주감명하기</button>
+            <div id="save-btn-group" style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;">
+                <button onclick="UI.showSaveModal()" style="padding:15px; background:#16a34a; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">💾 사주 저장하기</button>
+                <button onclick="UI.toggleSaveList()" style="padding:15px; background:#475569; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">📂 저장 목록 보기</button>
+            </div>
+        </div>
+
+        <div id="save-list-area" style="display:none; margin-top:10px; background:#f1f5f9; padding:15px; border-radius:15px; border:1px solid #cbd5e1;">
+            <div style="font-size:0.9rem; font-weight:bold; margin-bottom:10px; color:#475569; display:flex; align-items:center;">
+                <span style="margin-right:8px;">📂</span> 저장된 사주 목록
+            </div>
+            <div id="save-list-content" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+    </div>
+
+    <div class="box" id="analysis-card" style="display:none;">
+        <h3>전문가 심층 판단</h3>
+        <div class="analysis-grid" id="report-content"></div>
+        <div class="desc-box"><span class="desc-title">💡 오행 흐름 시뮬레이션 (생/극/설)</span><div id="flow-explanation"></div></div>
+        <div class="desc-box" style="background:#f0f7ff; border-color:#bee3f8;"><span class="desc-title" style="color:#2b6cb0;">✨ 원국 병약(病藥) 및 이슈 탐지</span><div id="disease-explanation" style="font-size:12px;"></div></div>
+    </div>
+
+    <div class="box" id="cheer-message-card" style="display:none; background: linear-gradient(135deg, #fffcf5, #fef3c7); border: 1.5px solid #fde68a;">
+        <h3 style="color: #b45309; margin-bottom: 12px;">🕯️ 김도사의 명리(命理) 잠언</h3>
+        <p style="font-size: 14px; line-height: 1.9; color: #78350f; font-weight: 500; margin: 0; text-align: justify;">
+            <b>"하늘의 기운은 멈추지 않고, 땅의 흐름은 어김이 없습니다."</b><br><br>
+            명리(命理)란 단순히 길흉을 점치는 도구가 아니라, 내 안의 <b>음양오행(陰陽五行)</b>이 세상의 흐름과 어떻게 공명하는지를 살피는 지혜입니다. 때로는 거센 바람이 부는 '충(沖)'의 시기를 지나기도 하고, 때로는 만물이 화합하는 '합(合)'의 계절을 맞이하기도 합니다. <br><br>
+            추운 겨울을 견딘 씨앗만이 봄의 생명력을 틔울 수 있듯, 지금의 고단함은 머지않아 다가올 당신만의 전성기를 위한 준비과정일 뿐입니다. 사주라는 정해진 틀에 갇히지 마십시오. 자신의 기운을 보하고(補), 넘치는 것을 덜어내는(洩) 지혜를 실천한다면, 흉(凶)은 변하여 길(吉)이 되고 운명은 비로소 당신의 손안에서 빛날 것입니다.<br><br>
+            오늘 하루도 당신을 둘러싼 우주의 기운과 화합하며, 묵묵히 자신의 길을 걸어가시길 온 마음을 다해 축원합니다.
+        </p>
+    </div>
+
+    <div class="box" id="guide-card" style="display:none; background: #f0f7ff; border: 1px solid #bee3f8;">
+        <h3 style="color: #2b6cb0; margin-bottom: 10px; font-size: 1rem;">📘 앱 사용 가이드</h3>
+        <p style="font-size: 13px; line-height: 1.6; color: #2c5282; margin: 0; font-weight: 500;">
+            1. <b>대운 흐름 카드</b>를 정확하게 선택해 주세요.<br>
+            2. 감명하고 싶은 <b>세운 흐름 카드</b>를 정확하게 선택합니다.<br>
+            3. 다시 <b>월운 흐름 카드</b>를 선택한 후에 나타나는 달력에서 <b>날짜</b>를 선택하면 제대로 된 감명 결과가 나오게 됩니다.
+        </p>
+    </div>
+
+    <div class="box"><h3>사주 원국 (原局)</h3><div class="saju-wrapper"><div class="saju" id="saju"></div></div>
+        <!-- 일주론 심층 분석 영역 -->
+        <div id="ilju-analysis-box" style="display:none; margin-top:20px; padding:20px; background:linear-gradient(145deg, #ffffff, #fff7ed); border:1px solid #ffedd5; border-radius:16px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div style="display:flex; align-items:center; margin-bottom:15px; border-bottom:2px solid #ffedd5; padding-bottom:10px;">
+                <span style="font-size:1.5rem; margin-right:10px;">👤</span>
+                <h4 style="margin:0; color:#9a3412; font-size:1.1rem; font-weight:800;">본질적 성향 분석 (일주론)</h4>
+            </div>
+            <div id="ilju-analysis-content" style="line-height:1.7; color:#431407; font-size:0.95rem;">
+                <!-- 일주론 해설 동적 삽입 -->
+            </div>
+        </div>
+        <!-- 평생운 심층 분석 영역 -->
+        <div id="life-analysis-box" style="display:none; margin-top:20px; padding:25px; background:linear-gradient(145deg, #ffffff, #f8fafc); border:1.5px solid #cbd5e1; border-radius:24px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.05);">
+            <div style="display:flex; align-items:center; margin-bottom:20px; border-bottom:2px solid #e2e8f0; padding-bottom:15px;">
+                <span style="font-size:1.8rem; margin-right:12px;">🗺️</span>
+                <div>
+                    <h4 style="margin:0; color:#0f172a; font-size:1.2rem; font-weight:900;">평생 운명의 흐름과 지향점</h4>
+                    <p style="margin:0; font-size:0.8rem; color:#64748b;">원국(原局)의 합충형파해 및 신살 종합 추론</p>
+                </div>
+            </div>
+            <div id="life-analysis-content" style="line-height:1.8; color:#334155; font-size:1rem;">
+                <!-- 평생운 해설 동적 삽입 -->
+            </div>
+        </div>
+        <!-- 미래 운명 시뮬레이션 영역 -->
+        <div id="future-simulation-container" style="margin-top:20px;"></div>
+    </div>
+    <div class="box"><h3>대운 흐름 (10년)</h3><div class="unlist-wrapper"><div class="unlist" id="daeun-list"></div></div>
+        <!-- 대운 상세 분석 영역 -->
+        <div id="daeun-analysis-box" style="display:none; margin-top:20px; padding:20px; background:linear-gradient(145deg, #ffffff, #f1f5f9); border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div style="display:flex; align-items:center; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">
+                <span style="font-size:1.5rem; margin-right:10px;">🔮</span>
+                <h4 id="daeun-analysis-title" style="margin:0; color:#1e293b; font-size:1.1rem; font-weight:800;">대운 명리 심층 분석</h4>
+            </div>
+            <div id="daeun-analysis-content" style="line-height:1.7; color:#334155; font-size:0.95rem;">
+                <!-- 분석 내용이 여기에 동적으로 삽입됨 -->
+            </div>
+        </div>
+    </div>
+    <div class="box"><h3>세운 흐름 (1년) <span id="seun-title" style="color:var(--primary); font-size:0.8rem;"></span></h3>
+        <div class="unlist-wrapper"><div class="unlist" id="seun-list"></div></div>
+        <!-- 세운 상세 분석 영역 -->
+        <div id="seun-analysis-box" style="display:none; margin-top:20px; padding:20px; background:linear-gradient(145deg, #ffffff, #f0fdf4); border:1px solid #dcfce7; border-radius:16px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div style="display:flex; align-items:center; margin-bottom:15px; border-bottom:2px solid #dcfce7; padding-bottom:10px;">
+                <span style="font-size:1.5rem; margin-right:10px;">📅</span>
+                <h4 id="seun-analysis-title" style="margin:0; color:#166534; font-size:1.1rem; font-weight:800;">세운 명리 심층 분석</h4>
+            </div>
+            <div id="seun-analysis-content" style="line-height:1.7; color:#334155; font-size:0.95rem;">
+                <!-- 세운 분석 내용 동적 삽입 -->
+            </div>
+        </div>
+        <p style="font-size: 11px; color: #718096; margin-top: 12px; line-height: 1.5; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px dashed #e2e8f0;">
+            💡 대운이 다음의 대운으로 넘어가는 시기의 세운은 이전의 대운과 넘어온 대운을 함께 감명해야함으로 11년치의 세운 선택이 가능하게 만들었습니다.
+        </p>
+    </div>
+    <div class="box"><h3>월운 흐름 (12개월) <span id="wolun-title" style="color:var(--primary); font-size:0.8rem;"></span></h3><div class="unlist-wrapper"><div class="unlist" id="wolun-list"></div></div></div>
+    <div class="box" id="calendar-container" style="display:none; padding: 15px 10px;">
+        <h3 id="calendar-title">명리 일일 달력</h3>
+        <table id="calendar-table">
+            <thead><tr><th style="color:#e53e3e">일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th style="color:#3182ce">토</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div id="daily-report-section" style="display:none; margin-bottom:40px;">
+        <div id="daily-report-content" class="box" style="padding:0; border:none;"></div>
+    </div>
+</div>
+
+<script src="engine10.min.js"></script>
+<script src="engine11.min.js"></script>
+<script src="engine12.min.js"></script>
+<script src="engine13.min.js"></script>
+<script src="engine14.min.js"></script><!-- 택일 상세 팝업 모달 -->
+<div id="taeilModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
+    <div style="background:#fff; width:100%; max-width:400px; border-radius:25px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out;">
+        <div id="taeilModalHeader" style="padding:20px; background:#f8fafc; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+            <h4 id="taeilModalTitle" style="margin:0; font-weight:900; color:#1e293b;"></h4>
+            <button onclick="closeTaeilModal()" style="border:none; background:none; font-size:24px; color:#94a3b8; cursor:pointer;">&times;</button>
+        </div>
+        <div id="taeilModalBody" style="padding:25px; max-height:60vh; overflow-y:auto;"></div>
+        <div style="padding:15px; background:#f1f5f9; text-align:center;">
+            <button onclick="closeTaeilModal()" style="width:100%; padding:12px; border-radius:12px; border:none; background:#1e293b; color:#fff; font-weight:800;">확인</button>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.taeil-day {
+    min-height: 55px;
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
+    padding: 4px 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fff;
+    box-sizing: border-box;
+}
+.taeil-day:hover { background: #f8fafc; border-color: #cbd5e1; }
+.taeil-day.weekend { background: #fffcfc; }
+.taeil-badge {
+    font-size: 9px;
+    font-weight: 900;
+    padding: 1px 4px;
+    border-radius: 4px;
+    margin-top: 2px;
+    color: #fff;
+    white-space: nowrap;
+    transform: scale(0.9);
+}
+
+/* 모바일 최적화 미디어 쿼리 */
+@media screen and (max-width: 480px) {
+    .taeil-grid {
+        gap: 2px !important;
+    }
+    .taeil-day {
+        min-height: 50px;
+        padding: 2px 1px;
+    }
+    .taeil-day span:nth-child(1) { font-size: 11px !important; } /* 일자 */
+    .taeil-day span:nth-child(2) { font-size: 7px !important; display: none; } /* 음력 생략(공간확보) */
+    .taeil-day span:nth-child(3) { font-size: 8px !important; transform: scale(0.8); margin-top: 0 !important; } /* 간지 */
+    .taeil-badge {
+        font-size: 8px;
+        padding: 1px 2px;
+        transform: scale(0.85);
+        margin-top: 1px;
+    }
+}
+#calendar-table td.cal-active { 
+    background-color: #ebf8ff !important; 
+    border: 3px solid #3182ce !important; 
+    box-shadow: 0 0 15px rgba(49, 130, 206, 0.4) !important;
+    z-index: 10;
+    position: relative;
+    transform: scale(1.02);
+}
+#calendar-table td.cal-active::after {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #3182ce;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 11;
+}
+</style>
+</body>
+</html>
